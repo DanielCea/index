@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Plazos (Actualizada)</title>
+    <title>Calculadora de Plazos</title>
 
     <style>
         body {
@@ -44,6 +44,7 @@
             margin-top: 20px;
         }
 
+        /* Estilos para agrupar los radio buttons */
         fieldset {
             margin: 15px 0;
             border: 1px solid #ccc;
@@ -89,7 +90,7 @@
     </fieldset>
     
     <div>
-        <label for="diasPlazo">Cantidad de Días de Plazo:</label>
+        <label for="diasPlazo">Plazo:</label>
         <input id="diasPlazo" type="number" value="10" min="1">
     </div>
     
@@ -99,26 +100,12 @@
 
     <script>
         // --- 1. LISTA DE FERIADOS (Formato: 'YYYY-MM-DD') ---
-        // ¡IMPORTANTE! Esta lista debe mantenerse actualizada.
+        // ¡IMPORTANTE! Esta lista debe mantenerse actualizada anualmente.
+        // (Feriados de ejemplo para Chile)
         const FERIADOS_CHILE = [
-            // Feriados 2024
             '2024-01-01', '2024-03-29', '2024-05-01', '2024-05-21', '2024-09-18', '2024-09-19', '2024-10-31', '2024-11-01', '2024-12-25',
-            
-            // Feriados 2025
-            '2025-01-01', '2025-04-18', '2025-05-01', '2025-05-21', '2025-09-18', '2025-09-19', '2025-10-31', '2025-11-01', '2025-12-08', '2025-12-25',
-            
-            // --- FERIADOS 2026 (NUEVOS) ---
-            // (Omitidos los que caen sábado o domingo)
-            '2026-01-01', // Jueves (Año Nuevo)
-            '2026-04-03', // Viernes (Viernes Santo)
-            '2026-05-01', // Viernes (Día del Trabajo)
-            '2026-05-21', // Jueves (Glorias Navales)
-            '2026-06-29', // Lunes (San Pedro y San Pablo)
-            '2026-07-16', // Jueves (Virgen del Carmen)
-            '2026-09-18', // Viernes (Independencia Nacional)
-            '2026-10-12', // Lunes (Encuentro de Dos Mundos)
-            '2026-12-08', // Martes (Inmaculada Concepción)
-            '2026-12-25'  // Viernes (Navidad)
+            '2025-01-01', '2025-04-18', '2025-05-01', '2025-05-21', '2025-09-18', '2025-09-19', '2025-10-31', '2025-11-01', '2025-12-25',
+            '2025-11-03' // Feriado actual (ejemplo)
         ];
         // ----------------------------------------------------
 
@@ -164,6 +151,7 @@
                 const fechaInicioString = inputFecha.value;
 
                 // 2. Obtener el tipo de plazo (hábil o corrido)
+                // Busca el input con name="tipoPlazo" que esté seleccionado (:checked)
                 const tipoPlazoSeleccionado = document.querySelector('input[name="tipoPlazo"]:checked').value;
 
                 // Validar datos
@@ -173,6 +161,7 @@
                 }
 
                 // 3. Preparar la fecha de inicio
+                // (Usamos split para crear la fecha y evitar problemas de zona horaria)
                 const partesFecha = fechaInicioString.split('-');
                 const fechaCalculada = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Mes es 0-indexado (Ene=0)
 
@@ -181,22 +170,27 @@
                     
                     // --- LÓGICA DE DÍAS HÁBILES ---
                     let diasHabilesContados = 0;
+                    // Bucle: sigue sumando días HASTA QUE los contados lleguen al plazo
                     while (diasHabilesContados < diasDePlazo) {
+                        // Suma 1 día calendario
                         fechaCalculada.setDate(fechaCalculada.getDate() + 1);
+                        // Revisa si ESE día es hábil
                         if (esDiaHabil(fechaCalculada)) {
-                            diasHabilesContados++; 
+                            diasHabilesContados++; // Solo suma al contador si es hábil
                         }
                     }
 
                 } else {
                     
                     // --- LÓGICA DE DÍAS CORRIDOS ---
+                    // Simplemente suma los días de plazo a la fecha de inicio
                     fechaCalculada.setDate(fechaCalculada.getDate() + diasDePlazo);
                 }
 
                 // 5. Mostrar el Resultado
+                // (Formateamos la fecha final a DD/MM/AAAA)
                 const diaFinal = fechaCalculada.getDate().toString().padStart(2, '0');
-                const mesFinal = (fechaCalculada.getMonth() + 1).toString().padStart(2, '0'); 
+                const mesFinal = (fechaCalculada.getMonth() + 1).toString().padStart(2, '0'); // Sumamos 1 al mes
                 const anioFinal = fechaCalculada.getFullYear();
                 
                 elResultado.textContent = `La fecha de cierre es: ${diaFinal}/${mesFinal}/${anioFinal}`;
@@ -205,3 +199,4 @@
     </script>
     </body>
 </html>
+
