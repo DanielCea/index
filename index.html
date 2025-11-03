@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Plazos (v2.0)</title>
+    <title>Calculadora de Plazos</title>
 
     <style>
         body {
@@ -32,7 +32,7 @@
 
         button {
             cursor: pointer;
-            background-color: #28a745; /* Color verde */
+            background-color: #28a745; 
             color: white;
             border: none;
             margin-top: 15px;
@@ -49,7 +49,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             padding: 10px;
-            width: 250px; /* Ancho fijo para ordenar opciones */
+            width: 250px;
         }
 
         fieldset legend {
@@ -67,13 +67,13 @@
             margin-right: 8px;
         }
     </style>
-    </head>
+</head>
 <body>
 
     <h2>Calculadora de Plazos</h2>
     
     <div>
-        <label for="fechaInicio">Fecha de Inicio:</label>
+        <label for="fechaInicio">Fecha de inicio:</label>
         <input id="fechaInicio" type="date">
     </div>
 
@@ -98,7 +98,7 @@
     </fieldset>
     
     <div>
-        <label for="cantidadPlazo">Plazo:</label>
+        <label for="cantidadPlazo">Duración:</label>
         <input id="cantidadPlazo" type="number" value="10" min="1">
     </div>
     
@@ -106,8 +106,9 @@
     
     <h3 id="fechaCierre">La fecha aparecerá aquí</h3>
 
+
     <script>
-        // --- 1. LISTA DE FERIADOS (Formato: 'YYYY-MM-DD') ---
+        // --- 1. LISTA DE FERIADOS (Sin cambios) ---
         const FERIADOS_CHILE = [
             // Feriados 2024
             '2024-01-01', '2024-03-29', '2024-05-01', '2024-05-21', '2024-09-18', '2024-09-19', '2024-10-31', '2024-11-01', '2024-12-25',
@@ -118,61 +119,42 @@
         ];
         // ----------------------------------------------------
 
-
-        // --- 2. Función auxiliar para saber si un día es hábil ---
+        // --- 2. Función esDiaHabil (Sin cambios) ---
         function esDiaHabil(fecha) {
             const diaDeLaSemana = fecha.getDay();
-            // 0 = Domingo, 6 = Sábado
-            if (diaDeLaSemana === 0 || diaDeLaSemana === 6) {
-                return false; // Fin de semana
-            }
-            
+            if (diaDeLaSemana === 0 || diaDeLaSemana === 6) { return false; }
             const anio = fecha.getFullYear();
             const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
             const dia = fecha.getDate().toString().padStart(2, '0');
             const fechaString = `${anio}-${mes}-${dia}`;
-
-            if (FERIADOS_CHILE.includes(fechaString)) {
-                return false; // Feriado
-            }
-
-            return true; // Es día hábil
+            if (FERIADOS_CHILE.includes(fechaString)) { return false; }
+            return true;
         }
         // ----------------------------------------------------
 
-
-        // --- 3. Event Listener Principal (Se ejecuta cuando la página carga) ---
+        // --- 3. Event Listener Principal (Lógica sin cambios) ---
         document.addEventListener('DOMContentLoaded', function() {
 
-            // Encontrar todas las piezas HTML por su 'id'
             const inputFecha = document.getElementById('fechaInicio');
-            const inputCantidad = document.getElementById('cantidadPlazo'); // ID actualizado
+            const inputCantidad = document.getElementById('cantidadPlazo');
             const boton = document.getElementById('btnCalcular');
             const elResultado = document.getElementById('fechaCierre');
 
             boton.addEventListener('click', function() {
                 
-                // 1. Obtener y validar los valores
-                const cantidadPlazo = parseInt(inputCantidad.value); // Variable actualizada
+                const cantidadPlazo = parseInt(inputCantidad.value);
                 const fechaInicioString = inputFecha.value;
-
-                // 2. Obtener el tipo de plazo (hábil, corrido, semana, mes)
                 const tipoPlazoSeleccionado = document.querySelector('input[name="tipoPlazo"]:checked').value;
 
-                // Validar datos
                 if (!fechaInicioString || isNaN(cantidadPlazo) || cantidadPlazo <= 0) {
                     elResultado.textContent = 'Error: Ingresa una fecha y cantidad válidas.';
                     return; 
                 }
 
-                // 3. Preparar la fecha de inicio
                 const partesFecha = fechaInicioString.split('-');
                 const fechaCalculada = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); 
 
-                // --- 4. LÓGICA CONDICIONAL MEJORADA (con if / else if) ---
-
                 if (tipoPlazoSeleccionado === 'habiles') {
-                    // --- LÓGICA DE DÍAS HÁBILES ---
                     let diasHabilesContados = 0;
                     while (diasHabilesContados < cantidadPlazo) {
                         fechaCalculada.setDate(fechaCalculada.getDate() + 1);
@@ -180,31 +162,21 @@
                             diasHabilesContados++; 
                         }
                     }
-
                 } else if (tipoPlazoSeleccionado === 'corridos') {
-                    // --- LÓGICA DE DÍAS CORRIDOS ---
                     fechaCalculada.setDate(fechaCalculada.getDate() + cantidadPlazo);
-
                 } else if (tipoPlazoSeleccionado === 'semanas') {
-                    // --- NUEVA LÓGICA DE SEMANAS ---
                     const diasTotales = cantidadPlazo * 7;
                     fechaCalculada.setDate(fechaCalculada.getDate() + diasTotales);
-
                 } else if (tipoPlazoSeleccionado === 'meses') {
-                    // --- NUEVA LÓGICA DE MESES ---
-                    // setMonth maneja automáticamente los cambios de año
-                    // y los días de cada mes (ej: 31 Ene + 1 mes = 03 Mar)
                     fechaCalculada.setMonth(fechaCalculada.getMonth() + cantidadPlazo);
                 }
 
-                // --- 5. Mostrar el Resultado (Sin cambios) ---
+                // --- 5. Mostrar el Resultado (TEXTO ACTUALIZADO) ---
                 const diaFinal = fechaCalculada.getDate().toString().padStart(2, '0');
                 const mesFinal = (fechaCalculada.getMonth() + 1).toString().padStart(2, '0'); 
                 const anioFinal = fechaCalculada.getFullYear();
                 
-                elResultado.textContent = `La fecha de cierre es: ${diaFinal}/${mesFinal}/${anioFinal}`;
+                // 7. Texto de la fecha final actualizado
+                elResultado.textContent = `La fecha es: ${diaFinal}/${mesFinal}/${anioFinal}`;
             });
         });
-    </script>
-    </body>
-</html>
