@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Plazos (Actualizada)</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        div {
+            margin: 8px 0;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #28a745; /* Color verde */
+            color: white;
+            border: none;
+            margin-top: 15px;
+        }
+
+        #fechaCierre {
+            color: #333;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        fieldset {
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        fieldset legend {
+            font-weight: bold;
+            padding: 0 5px;
+        }
+
+        fieldset div {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        fieldset input[type="radio"] {
+            margin-right: 8px;
+        }
+    </style>
+    </head>
+<body>
+
+    <h2>Calculadora de Fecha de Cierre</h2>
+    
+    <div>
+        <label for="fechaInicio">Fecha de Inicio:</label>
+        <input id="fechaInicio" type="date">
+    </div>
+
+    <fieldset>
+        <legend>Tipo de Plazo:</legend>
+        <div>
+            <input type="radio" id="opHabiles" name="tipoPlazo" value="habiles" checked>
+            <label for="opHabiles">Días Hábiles</label>
+        </div>
+        <div>
+            <input type="radio" id="opCorridos" name="tipoPlazo" value="corridos">
+            <label for="opCorridos">Días Corridos</label>
+        </div>
+    </fieldset>
+    
+    <div>
+        <label for="diasPlazo">Cantidad de Días de Plazo:</label>
+        <input id="diasPlazo" type="number" value="10" min="1">
+    </div>
+    
+    <button id="btnCalcular">Calcular Fecha de Cierre</button>
+    
+    <h3 id="fechaCierre">La fecha de cierre aparecerá aquí</h3>
+
+    <script>
+        // --- 1. LISTA DE FERIADOS (Formato: 'YYYY-MM-DD') ---
+        // ¡IMPORTANTE! Esta lista debe mantenerse actualizada.
+        const FERIADOS_CHILE = [
+            // Feriados 2024
+            '2024-01-01', '2024-03-29', '2024-05-01', '2024-05-21', '2024-09-18', '2024-09-19', '2024-10-31', '2024-11-01', '2024-12-25',
+            
+            // Feriados 2025
+            '2025-01-01', '2025-04-18', '2025-05-01', '2025-05-21', '2025-09-18', '2025-09-19', '2025-10-31', '2025-11-01', '2025-12-08', '2025-12-25',
+            
+            // --- FERIADOS 2026 (NUEVOS) ---
+            // (Omitidos los que caen sábado o domingo)
+            '2026-01-01', // Jueves (Año Nuevo)
+            '2026-04-03', // Viernes (Viernes Santo)
+            '2026-05-01', // Viernes (Día del Trabajo)
+            '2026-05-21', // Jueves (Glorias Navales)
+            '2026-06-29', // Lunes (San Pedro y San Pablo)
+            '2026-07-16', // Jueves (Virgen del Carmen)
+            '2026-09-18', // Viernes (Independencia Nacional)
+            '2026-10-12', // Lunes (Encuentro de Dos Mundos)
+            '2026-12-08', // Martes (Inmaculada Concepción)
+            '2026-12-25'  // Viernes (Navidad)
+        ];
+        // ----------------------------------------------------
+
+
+        // --- 2. Función auxiliar para saber si un día es hábil ---
+        function esDiaHabil(fecha) {
+            const diaDeLaSemana = fecha.getDay();
+            // 0 = Domingo, 6 = Sábado
+            if (diaDeLaSemana === 0 || diaDeLaSemana === 6) {
+                return false; // Fin de semana
+            }
+            
+            // Formatear fecha a 'YYYY-MM-DD' para comparar
+            const anio = fecha.getFullYear();
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            const fechaString = `${anio}-${mes}-${dia}`;
+
+            // Revisar si la fecha está en la lista de feriados
+            if (FERIADOS_CHILE.includes(fechaString)) {
+                return false; // Feriado
+            }
+
+            return true; // Es día hábil
+        }
+        // ----------------------------------------------------
+
+
+        // --- 3. Event Listener Principal (Se ejecuta cuando la página carga) ---
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Encontrar todas las piezas HTML por su 'id'
+            const inputFecha = document.getElementById('fechaInicio');
+            const inputDias = document.getElementById('diasPlazo');
+            const boton = document.getElementById('btnCalcular');
+            const elResultado = document.getElementById('fechaCierre');
+
+            // Definir qué hacer cuando se hace clic en el botón
+            boton.addEventListener('click', function() {
+                
+                // 1. Obtener y validar los valores
+                const diasDePlazo = parseInt(inputDias.value);
+                const fechaInicioString = inputFecha.value;
+
+                // 2. Obtener el tipo de plazo (hábil o corrido)
+                const tipoPlazoSeleccionado = document.querySelector('input[name="tipoPlazo"]:checked').value;
+
+                // Validar datos
+                if (!fechaInicioString || isNaN(diasDePlazo) || diasDePlazo <= 0) {
+                    elResultado.textContent = 'Error: Ingresa una fecha y días válidos.';
+                    return; // Detiene la ejecución
+                }
+
+                // 3. Preparar la fecha de inicio
+                const partesFecha = fechaInicioString.split('-');
+                const fechaCalculada = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Mes es 0-indexado (Ene=0)
+
+                // 4. Lógica condicional (IF/ELSE)
+                if (tipoPlazoSeleccionado === 'habiles') {
+                    
+                    // --- LÓGICA DE DÍAS HÁBILES ---
+                    let diasHabilesContados = 0;
+                    while (diasHabilesContados < diasDePlazo) {
+                        fechaCalculada.setDate(fechaCalculada.getDate() + 1);
+                        if (esDiaHabil(fechaCalculada)) {
+                            diasHabilesContados++; 
+                        }
+                    }
+
+                } else {
+                    
+                    // --- LÓGICA DE DÍAS CORRIDOS ---
+                    fechaCalculada.setDate(fechaCalculada.getDate() + diasDePlazo);
+                }
+
+                // 5. Mostrar el Resultado
+                const diaFinal = fechaCalculada.getDate().toString().padStart(2, '0');
+                const mesFinal = (fechaCalculada.getMonth() + 1).toString().padStart(2, '0'); 
+                const anioFinal = fechaCalculada.getFullYear();
+                
+                elResultado.textContent = `La fecha de cierre es: ${diaFinal}/${mesFinal}/${anioFinal}`;
+            });
+        });
+    </script>
+    </body>
+</html>
